@@ -4,14 +4,17 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn import cross_validation
 from sklearn import metrics
 
-def plot_confusion_matrix(cm, classes,
-                          normalize=False,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+def plot_confusion_matrix(
+    cm, classes,
+    normalize=False,
+    title='Confusion matrix',
+    cmap=plt.cm.Blues
+):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -36,7 +39,9 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
 # Load training data from disk
-training_set = pickle.load(open('training_set.sav', 'rb'))
+training_set = pickle.load(
+    open('training_set.sav', 'rb')
+)
 
 # Format the features and labels for use with scikit learn
 feature_list = []
@@ -61,31 +66,43 @@ y_train = np.array(label_list)
 encoder = LabelEncoder()
 y_train = encoder.fit_transform(y_train)
 
+print('Training Set Dimensions: {}'.format(X_train.shape))
+
 # Create classifier
-clf = svm.SVC(kernel='linear')
+#clf = svm.SVC(kernel='linear')
+clf = MLPClassifier(
+    hidden_layer_sizes = (96, 48),
+    batch_size = 256,
+    learning_rate_init = 0.1
+)
 
 # Set up 5-fold cross-validation
-kf = cross_validation.KFold(len(X_train),
-                            n_folds=5,
-                            shuffle=True,
-                            random_state=1)
+kf = cross_validation.KFold(
+    len(X_train),
+    n_folds=5,
+    shuffle=True,
+    random_state=1
+)
 
 # Perform cross-validation
-scores = cross_validation.cross_val_score(cv=kf,
-                                         estimator=clf,
-                                         X=X_train, 
-                                         y=y_train,
-                                         scoring='accuracy'
-                                        )
+scores = cross_validation.cross_val_score(
+    cv=kf,
+    estimator=clf,
+    X=X_train,
+    y=y_train,
+    scoring='accuracy'
+)
+
 print('Scores: ' + str(scores))
 print('Accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), 2*scores.std()))
 
 # Gather predictions
-predictions = cross_validation.cross_val_predict(cv=kf,
-                                          estimator=clf,
-                                          X=X_train, 
-                                          y=y_train
-                                         )
+predictions = cross_validation.cross_val_predict(
+    cv=kf,
+    estimator=clf,
+    X=X_train,
+    y=y_train
+)
 
 accuracy_score = metrics.accuracy_score(y_train, predictions)
 print('accuracy score: '+str(accuracy_score))
